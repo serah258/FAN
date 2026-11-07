@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master Character Compendium</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-sub: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --border: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .title-group h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .title-group p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-grow: 1;
+      max-width: 600px;
+    }
+
+    #searchBar {
+      width: 100%;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+    }
+    #searchBar:focus {
+      border-color: var(--accent);
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--card-sub);
+      color: var(--text);
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .btn:hover {
+      background: var(--accent-hover);
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    details {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    details[open] {
+      border-color: var(--accent);
+    }
+
+    summary {
+      padding: 14px 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1.05rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      background: var(--card-bg);
+    }
+    summary:hover {
+      background: var(--card-sub);
+    }
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .count-badge {
+      background: var(--card-sub);
+      color: var(--accent);
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .character-container {
+      padding: 16px 20px 20px 20px;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+
+    .char-card {
+      background: rgba(51, 65, 85, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+    }
+    .char-card.hidden {
+      display: none !important;
+    }
+
+    .highlight {
+      background: #fef08a;
+      color: #0f172a;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-group">
+      <h1>Character Compendium</h1>
+      <p id="totalStat">Loading database...</p>
+    </div>
+    <div class="controls">
+      <input type="text" id="searchBar" placeholder="Search across all characters and universes..." onkeyup="filterCharacters()">
+      <button class="btn" onclick="toggleAll(true)">Expand All</button>
+      <button class="btn" onclick="toggleAll(false)">Collapse All</button>
+    </div>
+  </header>
+
+  <main id="app"></main>
+
+  <!-- External Data File -->
+  <script src="data.js"></script>
+
+  <script>
+    // Build DOM dynamically from data.js
+    const app = document.getElementById("app");
+    let totalCount = 0;
+
+    characterDatabase.forEach(group => {
+      totalCount += group.characters.length;
+
+      const details = document.createElement("details");
+      details.innerHTML = `
+        <summary>
+          <span>${group.category}</span>
+          <span class="count-badge">${group.characters.length}</span>
+        </summary>
+        <div class="character-container">
+          ${group.characters.map(name => `<div class="char-card" data-raw-text="${name}">${name}</div>`).join('')}
+        </div>
+      `;
+      app.appendChild(details);
+    });
+
+    document.getElementById("totalStat").innerText = `${totalCount.toLocaleString()} Entries Across ${characterDatabase.length} Categories`;
+
+    function toggleAll(expand) {
+      document.querySelectorAll("details").forEach(d => d.open = expand);
+    }
+
+    function filterCharacters() {
+      const query = document.getElementById("searchBar").value.toLowerCase().trim();
+      const sections = document.querySelectorAll("details");
+
+      sections.forEach(section => {
+        let hasMatches = false;
+        const cards = section.querySelectorAll(".char-card");
+
+        cards.forEach(card => {
+          const originalText = card.dataset.rawText;
+
+          if (!query) {
+            card.classList.remove("hidden");
+            card.innerHTML = originalText;
+            hasMatches = false;
+          } else if (originalText.toLowerCase().includes(query)) {
+            card.classList.remove("hidden");
+            hasMatches = true;
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "gi");
+            card.innerHTML = originalText.replace(regex, '<span class="highlight">$1</span>');
+          } else {
+            card.classList.add("hidden");
+            card.innerHTML = originalText;
+          }
+        });
+
+        if (query) {
+          section.open = hasMatches;
+          section.style.display = hasMatches ? "block" : "none";
+        } else {
+          section.open = false;
+          section.style.display = "block";
+        }
+      });
+    }
+  </script>
+</body>
+</html>
